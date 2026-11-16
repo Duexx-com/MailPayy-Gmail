@@ -49,11 +49,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def create_gmail_account(name, password, bot, chat_id):
     chrome_options = Options()
+    chrome_options.add_argument("--headless")  # সার্ভারে চালানোর জন্য হেডলেস মোড আবশ্যক
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920x1080")
-    # Render-এ চালানোর জন্য headless মোড দরকার হতে পারে, তবে ব্রাউজার না থাকায় সেলেনিয়াম এখানে ক্র্যাশ করতে পারে।
-    # chrome_options.add_argument("--headless") 
 
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
@@ -110,7 +110,6 @@ async def create_gmail_account(name, password, bot, chat_id):
         driver.quit()
 
 def main():
-    # Render-এর টাইমআউট সমস্যা সমাধানের জন্য কাস্টম রিকোয়েস্ট কনফিগারেশন
     custom_request = HTTPXRequest(
         connect_timeout=30.0,
         read_timeout=30.0,
