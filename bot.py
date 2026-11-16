@@ -57,7 +57,7 @@ def create_gmail_account(name, password, bot, chat_id):
     chrome_options.add_argument("--window-size=1920x1080")
     
     # প্রক্সি ব্যবহার করতে চাইলে নিচের লাইনটি আনকমেন্ট করুন এবং আইপি দিন
-    # chrome_options.add_argument(f"--proxy-server=http://68.71.252.38")
+    # chrome_options.add_argument(f"--proxy-server=http://68.71.252.38:4145")
 
     driver = webdriver.Chrome(ChromeDriverManager().install(), options=chrome_options)
     
