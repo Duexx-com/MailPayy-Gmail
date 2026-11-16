@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y \
     unzip \
     gnupg \
     libxi6 \
-    libgconf-2-4 \
     libnss3 \
     libatk-bridge2.0-0 \
     libcups2 \
