@@ -12,7 +12,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # ==========================================
 # আপনার টেলিগ্রাম বটের টোকেন এখানে দিন
-BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN_HERE"
+BOT_TOKEN = "8888654131:AAHSI87X19w9mQxG4EFCF7Q6PY2O9Z1z94Q"
 # ==========================================
 
 # গ্লোবাল ভেরিয়েবল (স্টেট ম্যানেজমেন্ট)
