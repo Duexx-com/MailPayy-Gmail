@@ -3,6 +3,7 @@ import random
 import time
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.request import HTTPXRequest
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -38,7 +39,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         await update.message.reply_text(f"{name} এর জন্য অ্যাকাউন্ট তৈরি করা হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।")
         
-        # অ্যাসিনক্রোনাসভাবে ক্রিয়েশন ফাংশন কল করা
         try:
             await create_gmail_account(name, password, context.bot, user_id)
         except Exception as e:
@@ -52,7 +52,7 @@ async def create_gmail_account(name, password, bot, chat_id):
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--window-size=1920x1080")
-    # পরীক্ষামূলকভাবে দেখার জন্য headless মোড কমেন্ট করে রাখা ভালো, যাতে ব্রাউজার স্ক্রিন দেখা যায়:
+    # Render-এ চালানোর জন্য headless মোড দরকার হতে পারে, তবে ব্রাউজার না থাকায় সেলেনিয়াম এখানে ক্র্যাশ করতে পারে।
     # chrome_options.add_argument("--headless") 
 
     service = Service(ChromeDriverManager().install())
@@ -79,7 +79,7 @@ async def create_gmail_account(name, password, bot, chat_id):
         
         time.sleep(2)
         
-        # ইউজারনেম (বানান সংশোধন করা হয়েছে: located)
+        # ইউজারনেম
         username_input = wait.until(EC.presence_of_element_located((By.ID, "username")))
         random_num = str(random.randint(100, 999))
         final_username = f"{name.replace(' ', '').lower()}{random_num}"
@@ -110,7 +110,15 @@ async def create_gmail_account(name, password, bot, chat_id):
         driver.quit()
 
 def main():
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    # Render-এর টাইমআউট সমস্যা সমাধানের জন্য কাস্টম রিকোয়েস্ট কনফিগারেশন
+    custom_request = HTTPXRequest(
+        connect_timeout=30.0,
+        read_timeout=30.0,
+        write_timeout=30.0,
+        pool_timeout=30.0,
+    )
+    
+    app = ApplicationBuilder().token(BOT_TOKEN).request(custom_request).build()
     
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
