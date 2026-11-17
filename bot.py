@@ -1,154 +1,127 @@
-import os
-import random
-import string
-import time
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-from telegram.request import HTTPXRequest
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.service import Service
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gmail Creator Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 { text-align: center; color: #333; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #0088cc;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover { background: #006699; }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #eef9ff;
+            border-left: 4px solid #0088cc;
+            display: none;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
 
-# ==========================================
-# আপনার টেলিগ্রাম বটের টোকেন এখানে দিন
-BOT_TOKEN = "8888654131:AAHSI87X19w9mQxG4EFCF7Q6PY2O9Z1z94Q"
-# ==========================================
+<div class="container">
+    <h2>Gmail Generator</h2>
+    
+    <div class="form-group">
+        <label for="apiKey">আপনার API Key:</label>
+        <input type="text" id="apiKey" placeholder="এখানে API Key দিন">
+    </div>
+    
+    <div class="form-group">
+        <label for="name">নাম (যেমন: Arif Ahmed):</label>
+        <input type="text" id="name" placeholder="নাম লিখুন">
+    </div>
+    
+    <button onclick="createAccount()">অ্যাকাউন্ট তৈরি করুন</button>
+    
+    <div id="result"></div>
+</div>
 
-# র‍্যান্ডম নাম এবং পাসওয়ার্ড জেনারেট করার ফাংশন
-def generate_random_credentials():
-    first_names = ["Arif", "Sabbir", "Tanvir", "Nayeem", "Rafi", "Shakil", "Mehedi", "Tariq", "Jayed", "Rakib", "Sumon", "Farhan", "Ayan", "Zayan", "Irfan"]
-    last_names = ["Ahmed", "Hasan", "Islam", "Hossain", "Rahman", "Khan", "Chowdhury", "Sarker", "Uddin", "Mahmud", "Siddiqui", "Talukder"]
-    
-    first_name = random.choice(first_names)
-    last_name = random.choice(last_names)
-    
-    # ইউজারনেমের জন্য র‍্যান্ডম সংখ্যা যোগ করা
-    random_digits = str(random.randint(1000, 99999))
-    username = f"{first_name.lower()}{last_name.lower()}{random_digits}"
-    
-    # ১২ ডিজিটের শক্তিশালী র‍্যান্ডম পাসওয়ার্ড তৈরি
-    chars = string.ascii_letters + string.digits + "@#$!"
-    password = ''.join(random.choice(chars) for _ in range(12))
-    
-    return first_name, last_name, username, password
+<script>
+    // টেলিগ্রাম ওয়েব অ্যাপ ইনিট
+    let tg = window.Telegram.WebApp;
+    tg.expand();
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "হ্যালো! আমি অটোমেটিক জিমেইল ক্রিয়েটর বট।\n\n"
-        "নতুন একটি র‍্যান্ডম জিমেইল অ্যাকাউন্ট তৈরি করতে /create কমান্ডটি দিন।"
-    )
+    async function createAccount() {
+        const apiKey = document.getElementById("apiKey").value.trim();
+        const name = document.getElementById("name").value.trim();
+        const resultDiv = document.getElementById("result");
 
-async def create_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    first_name, last_name, username, password = generate_random_credentials()
-    
-    await update.message.reply_text(
-        f"⏳ অটোমেটিক অ্যাকাউন্ট তৈরি শুরু হয়েছে...\n\n"
-        f"নির্বাচিত নাম: {first_name} {last_name}\n"
-        f"অনুগ্রহ করে কিছুক্ষণ অপেক্ষা করুন..."
-    )
-    
-    try:
-        await create_gmail_account(first_name, last_name, username, password, context.bot, user_id)
-    except Exception as e:
-        await update.message.reply_text(f"❌ ত্রুটি হয়েছে: {str(e)}")
+        if (!apiKey || !name) {
+            alert("দয়া করে API Key এবং নাম উভয়ই দিন!");
+            return;
+        }
 
-async def create_gmail_account(first_name, last_name, final_username, password, bot, chat_id):
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--window-size=1920x1080")
+        resultDiv.style.display = "block";
+        resultDiv.innerHTML = "⏳ প্রসেস হচ্ছে, অপেক্ষা করুন...";
 
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-    
-    try:
-        driver.get("https://accounts.google.com/signup/v1/webid?continue=https://accounts.google.com/manageyouraccount&hl=en&flowName=GlifWebSignIn&flowEntry=SignUp")
-        
-        wait = WebDriverWait(driver, 20)
-        
-        # ১. ফার্স্ট নেম ইনপুট করা
-        first_name_input = wait.until(EC.presence_of_element_located((By.ID, "firstName")))
-        first_name_input.clear()
-        first_name_input.send_keys(first_name)
-        
-        # ২. লাস্ট নেম ইনপুট করা
-        last_name_input = driver.find_element(By.ID, "lastName")
-        last_name_input.clear()
-        last_name_input.send_keys(last_name)
-            
-        # Next বাটন
-        next_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[contains(text(),'Next')]")))
-        next_btn.click()
-        
-        time.sleep(2)
-        
-        # ৩. ইউজারনেম ইনপুট করা
-        username_input = wait.until(EC.presence_of_element_located((By.ID, "username")))
-        username_input.clear()
-        username_input.send_keys(final_username)
-        
-        next_btn2 = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[contains(text(),'Next')]")))
-        next_btn2.click()
-        
-        time.sleep(2)
-        
-        # ৪. পাসওয়ার্ড ইনপুট করা
-        password_input = wait.until(EC.presence_of_element_located((By.ID, "password")))
-        password_input.clear()
-        password_input.send_keys(password)
-        
-        next_btn3 = wait.until(EC.element_to_be_clickable((By.XPATH, "//span[contains(text(),'Next')]")))
-        next_btn3.click()
-        
-        time.sleep(3)
-        
-        # ফোন নম্বর ভেরিফিকেশন স্কিপ করার চেষ্টা
-        try:
-            skip_btn = WebDriverWait(driver, 5).until(EC.element_to_be_clickable((By.XPATH, "//span[contains(text(),'Skip')]")))
-            skip_btn.click()
-            time.sleep(2)
-        except:
-            pass
-            
-        await bot.send_message(
-            chat_id=chat_id, 
-            text=(
-                f"✅ প্রসেস সম্পন্ন হয়েছে!\n\n"
-                f"👤 নাম: {first_name} {last_name}\n"
-                f"📧 জিমেইল: `{final_username}@gmail.com`\n"
-                f"🔑 পাসওয়ার্ড: `{password}`"
-            ),
-            parse_mode="Markdown"
-        )
+        try {
+            // আপনার Render.com এর ব্যাকএন্ড লিংক এখানে বসাবেন
+            const backendUrl = "https://YOUR-RENDER-APP-URL.onrender.com/api/create-account";
 
-    except Exception as e:
-        await bot.send_message(chat_id=chat_id, text=f"❌ অ্যাকাউন্ট তৈরি করতে ব্যর্থ হয়েছে:\n{str(e)}")
-        
-    finally:
-        driver.quit()
+            const response = await fetch(backendUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": apiKey
+                },
+                body: JSON.stringify({ name: name })
+            });
 
-def main():
-    custom_request = HTTPXRequest(
-        connect_timeout=30.0,
-        read_timeout=30.0,
-        write_timeout=30.0,
-        pool_timeout=30.0,
-    )
-    
-    app = ApplicationBuilder().token(BOT_TOKEN).request(custom_request).build()
-    
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("create", create_command))
-    
-    print("Bot is running...")
-    app.run_polling()
+            const data = await response.json();
 
-if __name__ == "__main__":
-    main()
+            if (response.ok && data.success) {
+                resultDiv.innerHTML = `
+                    <b>✅ সফলভাবে তৈরি হয়েছে!</b><br>
+                    📧 ইমেইল: <code>${data.email}</code><br>
+                    🔑 পাসওয়ার্ড: <code>${data.password}</code>
+                `;
+            } else {
+                resultDiv.innerHTML = `❌ ত্রুটি: ${data.detail || "অবৈধ API Key বা সার্ভার সমস্যা!"}`;
+            }
+        } catch (error) {
+            resultDiv.innerHTML = `❌ সার্ভারের সাথে সংযোগ স্থাপন করা যায়নি!`;
+        }
+    }
+</script>
+
+</body>
+</html>
